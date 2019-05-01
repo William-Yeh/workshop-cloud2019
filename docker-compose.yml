@@ -6,9 +6,9 @@ services:
   #
   todo:
     build: ./TodoFrontend
-    image: todofrontend:3.0
+    image: todofrontend:4.0
     ports:
-      - "80:80"
+      - "30000:80"
     depends_on:
       - "todo-api"
 
@@ -20,4 +20,4 @@ services:
     build: ./TodoApi
     image: todoapi:3.0
     ports:
-      - "8000:80"
+      - "30080:80"
