@@ -44,7 +44,8 @@ metadata:
     tier: backend
 spec:
   ports:
-  - port: 80
+  - name: http-todoapi
+    port: 80
     nodePort: 30080
   selector:
     app: todo

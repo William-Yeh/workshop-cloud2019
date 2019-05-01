@@ -1,5 +1,17 @@
 # Todo sample for Kubernetes
 
+
+## Configurable settings
+
+Store config in the environment (aka the [12-factor app](https://12factor.net/) principles).
+
+Public accessible endpoint for todoapi backend, defined in [config.local.yml](k8s/config.local.yml):
+
+ - `TODOAPI_HOST` : default = `localhost`
+ - `TODOAPI_PORT` : default = `30080`
+ - `TODOAPI_PATH` : default = `/api/todo`
+
+
 ## Architecture
 
 A *dockerized* web app with separate frontend and backend services on *Kubernetes* (locally).
@@ -14,10 +26,27 @@ Web endpoint with port = `30000`.
 
 Backend program written in ASP.NET Core.
 
-API endpoint with port = `30080` and path = `/api/todo`.
+API endpoint with port = `TODOAPI_PORT` (default = `30080`) and path = `TODOAPI_PATH` (default = `/api/todo`).
 
 
 ## Usage
+
+### Preparation
+
+1. Create a `todo` namespace for this app:
+
+   ```
+   % kubectl create ns todo
+   ```
+
+2. Load the ConfigMap content:
+
+   ```
+   % kubectl apply -f k8s/config.local.yml  -n todo
+   % kubectl get configmaps  -n todo
+   ```
+
+### Build
 
 1. Build images:
 
@@ -25,27 +54,24 @@ API endpoint with port = `30080` and path = `/api/todo`.
    % docker-compose build
    ```
 
-2. Create a `todo` namespace for this app:
 
-   ```
-   % kubectl create ns todo
-   ```
+### Run
 
-3. Start the backend:
+1. Start the backend:
 
    ```
    % kubectl apply -f k8s/todoapi-service.yml -n todo
    % kubectl get svc  -n todo
    ```
 
-4. Start the frontend:
+2. Start the frontend:
 
    ```
    % kubectl apply -f k8s/todofrontend-service.yml -n todo
    % kubectl get svc  -n todo
    ```
 
-5. Use your browser to visit the web app at http://localhost:30000
+3. Use your browser to visit the web app at http://localhost:30000
 
 
 ## Kubernetes dashboard
@@ -71,6 +97,8 @@ Apache License 2.0.  See the [LICENSE](LICENSE) file.
 
 
 ## History
+
+**5.0**: Support ConfigMap and naming convention.
 
 **4.1**: Use Kubernetes dashboard.
 
