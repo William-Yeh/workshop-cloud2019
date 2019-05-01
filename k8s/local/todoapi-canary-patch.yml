@@ -1,0 +1,11 @@
+---
+#
+# patch the replica factor of todoapi-canary
+#
+
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: todo
+      tier: backend

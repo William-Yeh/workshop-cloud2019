@@ -38,7 +38,7 @@ Cloud web endpoint:
 
 **Backend**
 
-Backend program written in ASP.NET Core.
+Backend program written in ASP.NET Core.  Two versions are provided: [stable version](TodoApi/) and [canary version](TodoApi-new/).
 
 Local API endpoint:
 
@@ -56,7 +56,7 @@ Cloud API endpoint:
 
 ## Usage
 
-### Preparation
+### Preparation for environment
 
 1. If you're using GKE, do the [gke-steps](gke-steps.md) first.
 
@@ -98,8 +98,10 @@ Cloud API endpoint:
 
    - [docker-compose.yml](docker-compose.yml)
    - [k8s/local/todoapi-service.yml](k8s/local/todoapi-service.yml)
+   - [k8s/local/todoapi-canary-deployment.yml](k8s/local/todoapi-canary-deployment.yml)
    - [k8s/local/todofrontend-service.yml](k8s/local/todofrontend-service.yml)
    - [k8s/test/todoapi-service.yml](k8s/test/todoapi-service.yml)
+   - [k8s/test/todoapi-canary-deployment.yml](k8s/test/todoapi-canary-deployment.yml)
    - [k8s/test/todofrontend-service.yml](k8s/test/todofrontend-service.yml)
 
 
@@ -121,40 +123,78 @@ If you're running the workshop on the cloud, be sure to push the images to regis
 
 ### Run at local stage
 
-1. Start the backend:
+1. Change working directory to `k8s/local`.
 
    ```
-   % kubectl apply -f k8s/local/todoapi-service.yml -n todo
+   % cd k8s/local
+   ```
+
+2. Start the backend:
+
+   ```
+   % kubectl apply -f todoapi-service.yml -n todo
    % kubectl get svc  -n todo
    ```
 
-2. Start the frontend:
+3. Start the frontend:
 
    ```
-   % kubectl apply -f k8s/local/todofrontend-service.yml -n todo
+   % kubectl apply -f todofrontend-service.yml -n todo
    % kubectl get svc  -n todo
    ```
 
-3. Use your browser to visit the web app at http://localhost:30000
+4. Use your browser to visit the web app at http://localhost:30000
 
 
 ### Run at test stage
 
-1. Start the backend:
+The same as the local stage, except that:
+
+- Change working directory to `k8s/test`.
+
+- Use your browser to visit the web app at http://FRONTEND_EXTERNAL_IP:80
+
+
+### Canary
+
+1. See the number of pods in the deployment:
 
    ```
-   % kubectl apply -f k8s/test/todoapi-service.yml -n todo
-   % kubectl get svc  -n todo
+   % kubectl get deployments -n todo
+   NAME      DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+   todoapi   3         3         3            3           4m
    ```
 
-2. Start the frontend:
+2. Launch the *canary* part of the `todoapi` service:
 
    ```
-   % kubectl apply -f k8s/test/todofrontend-service.yml -n todo
-   % kubectl get svc  -n todo
+   % kubectl apply -f todoapi-canary-deployment.yml -n todo
    ```
 
-3. Use your browser to visit the web app at http://FRONTEND_EXTERNAL_IP:80
+3. See again the number of pods in the deployments, including the *canary* part:
+
+   ```
+   % kubectl get deployments -n todo
+   NAME             DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+   todoapi          3         3         3            3           5m
+   todoapi-canary   1         1         1            1           44s
+   ```
+ 
+4. Scale the *canary* part:
+
+   ```
+   % kubectl patch deployment todoapi-canary \
+       --patch "$(cat todoapi-canary-patch.yml)" -n todo
+   ```
+
+5. See again the number of pods in the deployments, including the *canary* part:
+
+   ```
+   % kubectl get deployments -n todo
+   NAME             DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+   todoapi          3         3         3            3           7m
+   todoapi-canary   2         2         2            2           2m
+   ```
 
 
 ## Kubernetes dashboard
@@ -180,6 +220,8 @@ Apache License 2.0.  See the [LICENSE](LICENSE) file.
 
 
 ## History
+
+**7.0**: Support canary release.
 
 **6.0**: Support Kubernetes on the cloud (GKE for example).
 

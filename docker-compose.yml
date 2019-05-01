@@ -21,3 +21,9 @@ services:
     image: gcr.io/PROJECT_ID/todoapi:3.0
     ports:
       - "30080:80"
+
+  todo-api-new:
+    build: ./TodoApi-new
+    image: gcr.io/PROJECT_ID/todoapi:7.0
+    ports:
+      - "30081:80"

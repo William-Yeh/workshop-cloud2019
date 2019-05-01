@@ -56,7 +56,7 @@ spec:
   type: LoadBalancer
   #loadBalancerIP: 111.222.333.444  # external IP (ephemeral or static)
   ports:
-  - name: http-todofrontend
+  - name: http
     port: 80
     targetPort: 80
   selector:
