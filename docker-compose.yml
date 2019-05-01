@@ -6,7 +6,7 @@ services:
   #
   todo:
     build: ./TodoFrontend
-    image: todofrontend:5.0
+    image: gcr.io/PROJECT_ID/todofrontend:5.0
     ports:
       - "30000:80"
     depends_on:
@@ -18,6 +18,6 @@ services:
   #
   todo-api:
     build: ./TodoApi
-    image: todoapi:3.0
+    image: gcr.io/PROJECT_ID/todoapi:3.0
     ports:
       - "30080:80"

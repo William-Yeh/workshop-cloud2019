@@ -26,18 +26,18 @@ spec:
     spec:
       containers:
       - name: todofrontend
-        image: todofrontend:5.0
+        image: gcr.io/PROJECT_ID/todofrontend:5.0
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80
         envFrom:
         - configMapRef:
-            name: config.local
+            name: config.test
         #env:
         #- name: TODOAPI_HOST
-        #  value: "localhost"
+        #  value: "todoapi-external-ip"
         #- name: TODOAPI_PORT
-        #  value: "30080"
+        #  value: "80"
         #- name: TODOAPI_PATH
         #  value: "api/todo"
       #dnsPolicy: ClusterFirst
@@ -53,11 +53,13 @@ metadata:
     app: todo
     tier: frontend
 spec:
+  type: LoadBalancer
+  #loadBalancerIP: 111.222.333.444  # external IP (ephemeral or static)
   ports:
   - name: http-todofrontend
     port: 80
-    nodePort: 30000
+    targetPort: 80
   selector:
     app: todo
     tier: frontend
-  type: NodePort
+

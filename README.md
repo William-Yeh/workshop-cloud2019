@@ -5,46 +5,103 @@
 
 Store config in the environment (aka the [12-factor app](https://12factor.net/) principles).
 
-Public accessible endpoint for todoapi backend, defined in [config.local.yml](k8s/config.local.yml):
+Public accessible endpoint for todoapi backend, defined in [config.local.yml](k8s/local/config.local.yml):
 
  - `TODOAPI_HOST` : default = `localhost`
  - `TODOAPI_PORT` : default = `30080`
  - `TODOAPI_PATH` : default = `/api/todo`
 
+A version for deployment on the cloud is also provided in [config.test.yml](k8s/test/config.test.yml):
+
+ - `TODOAPI_HOST` : external IP (ephemeral or static) or domain name allocated by cloud providers.
+ - `TODOAPI_PORT` : default = `80`
+ - `TODOAPI_PATH` : default = `/api/todo`
+
 
 ## Architecture
 
-A *dockerized* web app with separate frontend and backend services on *Kubernetes* (locally).
+A *dockerized* web app with separate frontend and backend services on *Kubernetes* (both locally and on the cloud).
 
 **Frontend**
 
 Static HTML5 files and jQuery scripts.
 
-Web endpoint with port = `30000`.
+Local web endpoint:
+
+- host = `localhost`
+- port = `30000`
+
+Cloud web endpoint:
+
+- host = external IP (ephemeral or static) or domain name allocated by cloud providers
+- port = `80`
 
 **Backend**
 
 Backend program written in ASP.NET Core.
 
-API endpoint with port = `TODOAPI_PORT` (default = `30080`) and path = `TODOAPI_PATH` (default = `/api/todo`).
+Local API endpoint:
+
+- host = `localhost`
+- port = `TODOAPI_PORT` (default = `30080`)
+- path = `TODOAPI_PATH` (default = `/api/todo`)
+
+Cloud API endpoint:
+
+- host = `TODOAPI_HOST` (to be revised in [config.test.yml](k8s/test/config.test.yml)), external IP (ephemeral or static) or domain name allocated by cloud providers
+- port = `TODOAPI_PORT` (default = `80`)
+- path = `TODOAPI_PATH` (default = `/api/todo`)
+
 
 
 ## Usage
 
 ### Preparation
 
-1. Create a `todo` namespace for this app:
+1. If you're using GKE, do the [gke-steps](gke-steps.md) first.
+
+2. Create a `todo` namespace for this app:
 
    ```
    % kubectl create ns todo
    ```
 
-2. Load the ConfigMap content:
+3. Load the ConfigMap content, if the workshop is to be run locally:
 
    ```
-   % kubectl apply -f k8s/config.local.yml  -n todo
+   % kubectl apply -f k8s/local/config.local.yml  -n todo
    % kubectl get configmaps  -n todo
    ```
+
+
+4. Load the ConfigMap content, if the workshop is for test on the cloud (GCP/GKE for example):
+
+   ```
+   # reserve a new static external IP address for backend todoapi
+   % gcloud compute addresses create todoapi --region=us-west1 --network-tier=PREMIUM
+
+   # make sure the static external IP address has been allocated
+   % gcloud compute addresses list
+
+   # replace the placeholder string "111.222.333.444" with the allocated IP address
+   % vi k8s/test/config.test.yml
+   % vi k8s/test/todoapi-service.yml
+
+   #...
+
+   # now, load it!
+   % kubectl apply -f k8s/test/config.test.yml  -n todo
+   % kubectl get configmaps  -n todo
+   ```
+
+5. Fill in correct image names by modifying the `PROJECT_ID` string in the following files:
+
+   - [docker-compose.yml](docker-compose.yml)
+   - [k8s/local/todoapi-service.yml](k8s/local/todoapi-service.yml)
+   - [k8s/local/todofrontend-service.yml](k8s/local/todofrontend-service.yml)
+   - [k8s/test/todoapi-service.yml](k8s/test/todoapi-service.yml)
+   - [k8s/test/todofrontend-service.yml](k8s/test/todofrontend-service.yml)
+
 
 ### Build
 
@@ -54,24 +111,50 @@ API endpoint with port = `TODOAPI_PORT` (default = `30080`) and path = `TODOAPI_
    % docker-compose build
    ```
 
+If you're running the workshop on the cloud, be sure to push the images to registry ([GCR](https://cloud.google.com/container-registry/) for example):
 
-### Run
+   ```
+   % docker push gcr.io/PROJECT_ID/
+   ```
+
+
+
+### Run at local stage
 
 1. Start the backend:
 
    ```
-   % kubectl apply -f k8s/todoapi-service.yml -n todo
+   % kubectl apply -f k8s/local/todoapi-service.yml -n todo
    % kubectl get svc  -n todo
    ```
 
 2. Start the frontend:
 
    ```
-   % kubectl apply -f k8s/todofrontend-service.yml -n todo
+   % kubectl apply -f k8s/local/todofrontend-service.yml -n todo
    % kubectl get svc  -n todo
    ```
 
 3. Use your browser to visit the web app at http://localhost:30000
+
+
+### Run at test stage
+
+1. Start the backend:
+
+   ```
+   % kubectl apply -f k8s/test/todoapi-service.yml -n todo
+   % kubectl get svc  -n todo
+   ```
+
+2. Start the frontend:
+
+   ```
+   % kubectl apply -f k8s/test/todofrontend-service.yml -n todo
+   % kubectl get svc  -n todo
+   ```
+
+3. Use your browser to visit the web app at http://FRONTEND_EXTERNAL_IP:80
 
 
 ## Kubernetes dashboard
@@ -97,6 +180,8 @@ Apache License 2.0.  See the [LICENSE](LICENSE) file.
 
 
 ## History
+
+**6.0**: Support Kubernetes on the cloud (GKE for example).
 
 **5.0**: Support ConfigMap and naming convention.
 

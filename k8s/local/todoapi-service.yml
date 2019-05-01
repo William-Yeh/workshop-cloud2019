@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
       - name: todoapi
-        image: todoapi:3.0
+        image: gcr.io/PROJECT_ID/todoapi:3.0
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80
@@ -43,6 +43,7 @@ metadata:
     app: todo
     tier: backend
 spec:
+  type: NodePort
   ports:
   - name: http-todoapi
     port: 80
@@ -50,4 +51,3 @@ spec:
   selector:
     app: todo
     tier: backend
-  type: NodePort
