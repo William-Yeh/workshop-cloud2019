@@ -1,5 +1,7 @@
 # Todo sample for Kubernetes
 
+**NOTE:** A revised version of this workshop is available at https://github.com/William-Yeh/workshop-gcpug201906
+
 
 ## Configurable settings
 
